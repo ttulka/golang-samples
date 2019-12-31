@@ -18,6 +18,18 @@ func (p *person) updateName3(name string) {
   p.name = name
 }
 
+func updateSlice(a []int, v int) {
+  a[0] = v
+}
+
+func updateArray(arr *[3]int, v int) {
+  arr[0] = v
+}
+
+func updateString(s *string, v string) {
+  *s = v
+}
+
 func main() {
   jim := person{"Jim"}
   
@@ -35,5 +47,21 @@ func main() {
   
   jim.updateName3("Jimmy3B");  
   fmt.Println(jim)
+  
+  
+  a := []int{1, 2, 3}
+  
+  updateSlice(a, 999)
+  fmt.Println(a)  
+  
+  arr := [3]int{11, 22, 33}
+  
+  updateArray(&arr, 888)
+  fmt.Println(arr)
+  
+  s := "abc"
+  
+  updateString(&s, "def")
+  fmt.Println(s)
 }
 

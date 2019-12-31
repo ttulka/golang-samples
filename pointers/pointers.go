@@ -30,6 +30,10 @@ func updateString(s *string, v string) {
   *s = v
 }
 
+func printPointer(p *string) {
+   fmt.Println(&p)
+}
+
 func main() {
   jim := person{"Jim"}
   
@@ -63,5 +67,11 @@ func main() {
   
   updateString(&s, "def")
   fmt.Println(s)
+  
+  sPointer := &s
+ 
+  fmt.Println(sPointer)
+  fmt.Println(&sPointer)
+  printPointer(sPointer)
 }
 

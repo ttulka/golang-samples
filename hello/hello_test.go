@@ -13,9 +13,9 @@ func TestHelloMsg(t *testing.T) {
 }	
 
 func TestReverse(t *testing.T) {
-	s := reverse("abc")
+	got := reverse("abc")
   
-  if s != "cba" {
-    t.Errorf("Expected 'cba', but got '%v'", s)
+  if got != "cba" {
+    t.Errorf("Expected 'cba', but got '%v'", got)
   }
 }	

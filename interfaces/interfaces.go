@@ -16,18 +16,23 @@ type Closer interface {
 }
 
 func main() {
-	p := processor{}
-	p.Read(make([]byte, 5))
+	buffer := make([]byte, 16)
+  p := processor{[]byte("data")}
+  read, err := p.Read(buffer)
 	p.Close()
+  
+  if err == nil {
+    fmt.Println("Buffer:", buffer[:read])
+  }
 }
 
 type processor struct {
-	readBytes []byte
+	data []byte
 }
 
-func (p *processor) Read(bytes []byte) (n int, err error) {
-	p.readBytes = bytes
-	l := len(bytes)
+func (p *processor) Read(buffer []byte) (n int, err error) {
+	copy(buffer, p.data) 
+	l := len(p.data)
 
 	fmt.Println("Read", l, "bytes")
 	return l, nil

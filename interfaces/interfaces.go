@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+  "fmt"
+  "os"
+)
 
 type ReadCloser interface {
 	Reader
@@ -16,14 +19,16 @@ type Closer interface {
 }
 
 func main() {
-	buffer := make([]byte, 16)
+	buffer := make([]byte, 32)
   p := processor{[]byte("data")}
   read, err := p.Read(buffer)
 	p.Close()
   
-  if err == nil {
-    fmt.Println("Buffer:", buffer[:read])
+  if err != nil {
+    fmt.Println("Error:", err)
+    os.Exit(1)
   }
+  fmt.Println("Buffer:", buffer[:read])
 }
 
 type processor struct {

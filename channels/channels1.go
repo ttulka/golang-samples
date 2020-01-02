@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "strconv"
+  "time"
 )
 
 func main() {
@@ -13,8 +14,15 @@ func main() {
     go process(strconv.Itoa(i + 1), ch)
   } 
   
-  for i := 0; i < times; i++ {
-    fmt.Println(<-ch)
+  for {
+    select {
+    case m := <-ch:
+      fmt.Println(m)
+    case <- time.After(time.Second):
+      fmt.Println("Closing the channel after timeout was reached")
+      close(ch)
+      return
+    }
   }
 }
 

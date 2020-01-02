@@ -17,11 +17,14 @@ func main() {
   for {
     select {
     case m := <-ch:
+      if m == "" {
+        fmt.Println("No more values - exit the program")
+        return
+      }
       fmt.Println(m)
     case <- time.After(time.Second):
       fmt.Println("Closing the channel after timeout was reached")
       close(ch)
-      return
     }
   }
 }

@@ -26,9 +26,9 @@ func main() {
       fmt.Println(err)
       return
     }
-    fmt.Printf("Client %v says '%v'\n", conn.RemoteAddr(), req)
+    fmt.Printf("Client %v: '%v'\n", conn.RemoteAddr(), req)
     
-    if err := writeResponse(conn, "Thank you!"); err != nil {
+    if err := writeResponse(conn, fmt.Sprintf("Hello, %v!", req)); err != nil {
       fmt.Println(err)
     }
     conn.Close()

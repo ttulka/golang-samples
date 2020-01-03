@@ -39,7 +39,7 @@ func main() {
   
   elapsed := time.Now().Sub(start)
   
-  fmt.Printf("Server reponse: '%v' took %v ms\n", res, elapsed)
+  fmt.Printf("Server reponse: '%v' took %v\n", res, elapsed)
 }
 
 func readResponse(conn net.Conn) (string, error) {

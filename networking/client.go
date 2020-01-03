@@ -9,6 +9,7 @@ import (
 
 func main() {
   port := os.Args[1:][0]
+  msg  := os.Args[1:][1]
   
   start := time.Now()
   
@@ -19,8 +20,9 @@ func main() {
   }
   defer conn.Close()
   
-  buffer := make([]byte, 128)
-  n, err := conn.Read(buffer)
+  conn.Write([]byte(msg))
+  
+  res, err := readResponse(conn)
   if err != nil {
     fmt.Println(err)
     return
@@ -28,5 +30,14 @@ func main() {
   
   elapsed := time.Now().Sub(start)
   
-  fmt.Printf("Server reponse: '%v' took %v ms\n", string(buffer[:n]), elapsed)
+  fmt.Printf("Server reponse: '%v' took %v ms\n", res, elapsed)
+}
+
+func readResponse(conn net.Conn) (string, error) {
+  buffer := make([]byte, 128)
+  n, err := conn.Read(buffer)
+  if err != nil {
+    return "", err
+  }
+  return string(buffer[:n]), nil
 }

@@ -19,9 +19,34 @@ func main() {
       fmt.Println(err)
       return
     }
-    fmt.Println("Client accepted", conn.RemoteAddr())
+    fmt.Printf("Client %v accepted\n", conn.RemoteAddr())
     
-    conn.Write([]byte("Nice to meet you!"))
+    req, err := readRequest(conn)
+    if err != nil {
+      fmt.Println(err)
+      return
+    }
+    fmt.Printf("Client %v says '%v'\n", conn.RemoteAddr(), req)
+    
+    if err := writeResponse(conn, "Thank you!"); err != nil {
+      fmt.Println(err)
+    }
     conn.Close()
   }
+}
+
+func readRequest(conn net.Conn) (string, error) {
+  buffer := make([]byte, 128)
+  n, err := conn.Read(buffer)
+  if err != nil {
+    return "", err
+  }
+  return string(buffer[:n]), nil
+}
+
+func writeResponse(conn net.Conn, response string) error {
+  if _, err := conn.Write([]byte(response)); err != nil {
+    return err
+  }
+  return nil
 }

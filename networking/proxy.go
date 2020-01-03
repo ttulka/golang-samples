@@ -25,6 +25,7 @@ func main() {
       fmt.Println(err)
       return
     }
+    conn.SetDeadline(time.Now().Add(time.Second * 20))
     go process(conn)
   }
 }

@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "net"
+  "time"
 )
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
       return
     }
     fmt.Printf("Client %v accepted\n", conn.RemoteAddr())
+    conn.SetDeadline(time.Now().Add(time.Second * 20))
     
     req, err := readRequest(conn)
     if err != nil {

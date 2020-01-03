@@ -7,10 +7,19 @@ import (
   "time"
 )
 
+var port, msg string
+
+func init() {
+  args := os.Args[1:]
+  if len(args) < 2 {
+    fmt.Println("Usage: <port> <message>")
+    os.Exit(2)
+  }
+  port = args[0]
+  msg  = args[1]
+}
+
 func main() {
-  port := os.Args[1:][0]
-  msg  := os.Args[1:][1]
-  
   start := time.Now()
   
   conn, err := net.Dial("tcp", net.JoinHostPort("127.0.0.1", port))

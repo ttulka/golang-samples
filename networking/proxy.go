@@ -31,35 +31,35 @@ func main() {
       fmt.Println(err)
       return
     }
-    conn.Write([]byte(res))
+    conn.Write(res)
     conn.Close()
   }
 }
 
-func proxy(request string) (string, error) {
+func proxy(request []byte) ([]byte, error) {
   conn, err := net.Dial("tcp", "127.0.0.1:4040")
   if err != nil {
-    return "", err
+    return nil, err
   }
   defer conn.Close()
   
   if err := write(conn, request); err != nil {
-    return "", err
+    return nil, err
   }
   return read(conn)
 }
 
-func read(conn net.Conn) (string, error) {
+func read(conn net.Conn) ([]byte, error) {
   buffer := make([]byte, 128)
   n, err := conn.Read(buffer)
   if err != nil {
-    return "", err
+    return nil, err
   }
-  return string(buffer[:n]), nil
+  return buffer[:n], nil
 }
 
-func write(conn net.Conn, msg string) error {
-  if _, err := conn.Write([]byte(msg)); err != nil {
+func write(conn net.Conn, data []byte) error {
+  if _, err := conn.Write(data); err != nil {
     return err
   }
   return nil

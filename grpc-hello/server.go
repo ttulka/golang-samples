@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 	"net"
 	"log"
 	"context"
@@ -21,6 +23,21 @@ func (*server) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.H
 		Result: result,
 	}
 	return res, nil
+}
+
+func (*server) HelloStreaming(req *hellopb.HelloStreamingRequest, stream hellopb.HelloService_HelloStreamingServer) error {
+	fmt.Printf("Streaming a request: '%v'\n", req)
+	
+	name := req.GetHello().GetName()
+	for i := 0; i < 10; i++ {
+		result := "Hello, " + name + " for " + strconv.Itoa(i + 1) + ". time!"
+		res := &hellopb.HelloStreamingResponse {
+			Result: result,
+		}
+		stream.Send(res)
+		time.Sleep(time.Second)
+	}	
+	return nil
 }
 
 func main() {

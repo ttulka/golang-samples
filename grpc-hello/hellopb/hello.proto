@@ -15,7 +15,18 @@ message HelloResponse {
 	string result = 1;
 }
 
+message HelloStreamingRequest {
+	Hello hello = 1;
+}
+
+message HelloStreamingResponse {
+	string result = 1;
+}
+
 service HelloService {
 	// Unary
 	rpc Hello(HelloRequest) returns (HelloResponse) {};
+	
+	// Server Streaming
+	rpc HelloStreaming(HelloStreamingRequest) returns (stream HelloStreamingResponse) {};
 }

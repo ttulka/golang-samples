@@ -3,4 +3,19 @@ syntax = "proto3";
 package hello;
 option go_package = "hellopb";
 
-service HelloService { }
+message Hello {
+	string name = 1;
+}
+
+message HelloRequest {
+	Hello hello = 1;
+}
+
+message HelloResponse {
+	string result = 1;
+}
+
+service HelloService {
+	// Unary
+	rpc Hello(HelloRequest) returns (HelloResponse) {};
+}

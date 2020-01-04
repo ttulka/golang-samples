@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"context"
 	"google.golang.org/grpc"
 	"github.com/ttulka/golang-samples/grpc-hello/hellopb"
 )
@@ -14,7 +14,16 @@ func main() {
 	}
 	defer conn.Close()
 	
-	c := hellopb.NewHelloServiceClient(conn)
+	c := hellopb.NewHelloServiceClient(conn)	
 	
-	fmt.Printf("Client created: %f", c)
+	req := &hellopb.HelloRequest {
+		Hello: &hellopb.Hello {
+			Name: "Tomas",
+		},
+	}
+	res, err := c.Hello(context.Background(), req)
+	if err != nil {
+		log.Fatalf("Error while calling: %v", err)
+	}
+	log.Printf("Response from the server: %v", res.Result)
 }

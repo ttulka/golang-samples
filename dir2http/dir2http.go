@@ -3,6 +3,8 @@ package main
 import (
   "net"
   "bufio"
+  //"io"
+  "io/ioutil"
   "strings"
   "log"
   "fmt"
@@ -29,6 +31,7 @@ func handle(conn net.Conn) {
   log.Println("Serving a request...")
     
   scann := bufio.NewScanner(conn)
+  var path string
   firstLine := true
   for scann.Scan() {
     ln := scann.Text()
@@ -43,24 +46,30 @@ func handle(conn net.Conn) {
       p := r[1]
       fmt.Println("***METHOD:", m)
       fmt.Println("***PATH:", p)
+      path = p[1:]
       firstLine = false
     }    
   }
   
-  body := `<!DOCTYPE html>
-           <html lang="en">
-           <head>
-              <meta charset="UTF-8">
-              <title>dir2http</title>
-           </head>
-           <body>
-            <h1>Hello from dir2http!</h1>
-           </body>
-           </html>`
+  var body string
+  
+  dat, err := ioutil.ReadFile(path)
+  if err != nil {
+    log.Println(err.Error())
+    notfound(conn)
+    return
+  }
+  
+  body = string(dat)
            
   fmt.Fprint(conn, "HTTP/1.1 200 OK\r\n")
   fmt.Fprintf(conn, "Content-Length: %d\r\n", len(body))
-  fmt.Fprint(conn, "Content-Type: text/html\r\n")
   fmt.Fprint(conn, "\r\n")
   fmt.Fprint(conn, body)
+}
+
+func notfound(conn net.Conn) {
+  fmt.Fprint(conn, "HTTP/1.1 404 Not Found\r\n")
+  fmt.Fprintf(conn, "Content-Length: 0\r\n")
+  fmt.Fprint(conn, "\r\n")
 }

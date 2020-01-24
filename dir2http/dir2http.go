@@ -30,28 +30,7 @@ func handle(conn net.Conn) {
   defer conn.Close()
   log.Println("Serving a request...")
     
-  scann := bufio.NewScanner(conn)
-  var path string
-  firstLine := true
-  for scann.Scan() {
-    ln := scann.Text()
-    fmt.Println("REQ:", ln)
-    if ln == "" {
-      log.Println("Disconnecting...")
-      break
-    }
-    if firstLine {
-      r := strings.Fields(ln)
-      m := r[0]
-      p := r[1]
-      fmt.Println("***METHOD:", m)
-      fmt.Println("***PATH:", p)
-      path = p[1:]
-      firstLine = false
-    }    
-  }
-  
-  var body string
+  path := request(conn)
   
   dat, err := ioutil.ReadFile(path)
   if err != nil {
@@ -59,13 +38,29 @@ func handle(conn net.Conn) {
     notfound(conn)
     return
   }
-  
-  body = string(dat)
-           
+             
   fmt.Fprint(conn, "HTTP/1.1 200 OK\r\n")
-  fmt.Fprintf(conn, "Content-Length: %d\r\n", len(body))
+  fmt.Fprintf(conn, "Content-Length: %d\r\n", len(dat))
   fmt.Fprint(conn, "\r\n")
-  fmt.Fprint(conn, body)
+  fmt.Fprint(conn, string(dat))
+}
+
+func request(conn net.Conn) string {
+  scann := bufio.NewScanner(conn)
+  var path string
+  firstLine := true
+  for scann.Scan() {
+    ln := scann.Text()
+    if ln == "" {
+      log.Println("Disconnecting...")
+      break
+    }
+    if firstLine {
+      path = strings.Fields(ln)[1][1:]
+      firstLine = false
+    }    
+  }
+  return path
 }
 
 func notfound(conn net.Conn) {

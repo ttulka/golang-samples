@@ -29,7 +29,8 @@ func main() {
 
 func handle(conn net.Conn) {
   defer conn.Close()
-  log.Println("Serving a request...")
+  log.Printf("Serving a request %v...\n", conn.RemoteAddr())
+  defer log.Printf("Diconnectiong %v...\n", conn.RemoteAddr())
     
   path := request(conn)
   
@@ -94,7 +95,6 @@ func request(conn net.Conn) string {
   for scann.Scan() {
     ln := scann.Text()
     if ln == "" {
-      log.Println("Disconnecting...")
       break
     }
     if firstLine {
@@ -108,7 +108,7 @@ func request(conn net.Conn) string {
 func redirection(conn net.Conn, loc string) {
   fmt.Fprint(conn, "HTTP/1.1 302 Found\r\n")
   fmt.Fprint(conn, "Content-Length: 0\r\n")
-  fmt.Fprintf(conn, "Location: %s\r\n", loc)
+  fmt.Fprintf(conn, "Location: %v\r\n", loc)
   fmt.Fprint(conn, "\r\n")
 }
 

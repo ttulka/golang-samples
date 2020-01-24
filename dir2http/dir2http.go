@@ -8,10 +8,41 @@ import (
   "strings"
   "log"
   "fmt"
+  "strconv"
+  "path"
+  "path/filepath"
 )
 
+var root string
+
 func main() {
-  li, err := net.Listen("tcp", ":1234")
+  args := os.Args[1:]
+  if len(args) < 1 {
+    fmt.Println("Usage: <port> [path/to/root:.]")
+    os.Exit(1)
+  }
+  port, err := strconv.Atoi(args[0])
+  if err != nil {
+    log.Fatalln("Wrong port!")
+  }
+  if len(args) > 1 {
+    root = args[1]
+  } else {
+    root = "."
+  }
+  root = filepath.Clean(root)
+  
+  info, err := os.Stat(root)
+  if os.IsNotExist(err) || !info.IsDir() {
+    fmt.Println(root, "is not a directory!")
+    os.Exit(1)
+  }
+  
+  server(port)
+}
+
+func server(port int) {
+  li, err := net.Listen("tcp", ":" + strconv.Itoa(port))
   if err != nil {
     log.Fatalln(err.Error())
   }
@@ -24,7 +55,7 @@ func main() {
       log.Fatalln(err.Error())
     }
     go handle(conn)
-  }  
+  }
 }
 
 func handle(conn net.Conn) {
@@ -32,39 +63,34 @@ func handle(conn net.Conn) {
   log.Printf("Serving a request %v...\n", conn.RemoteAddr())
   defer log.Printf("Diconnectiong %v...\n", conn.RemoteAddr())
     
-  path := request(conn)
-  
-  if path == "" {
-    path = "index.html"
+  r := request(conn)
+  if r == "" {
+    r = "index.html"
   }
-  pathChanged := false
-  for strings.HasPrefix(path, "/") {
-    path = path[1:len(path)]
-    pathChanged = true
+  p := path.Clean(r)
+  for strings.HasPrefix(p, "/") {
+    p = p[1:]
   }
-  for strings.HasSuffix(path, "/") {
-    path = path[:len(path) - 1]
-    pathChanged = true
-  }  
-  if pathChanged {
-    redirection(conn, "/" + path)
+  if p != r {
+    redirection(conn, "/" + p)
   }
   
-  info, err := os.Stat(path)
+  p = filepath.Join(root, p)  
+  info, err := os.Stat(p)
   if os.IsNotExist(err) {
     notfound(conn)
     return
   }
   if info.IsDir() {
-    path += "/index.html"
+    p = filepath.Join(p, "index.html")
   }
-  info, err = os.Stat(path)
+  info, err = os.Stat(p)
   if os.IsNotExist(err) {
     forbidden(conn)
     return
   }
   
-  f, err := os.Open(path)
+  f, err := os.Open(p)
   if err != nil {
     servererror(conn, err.Error())
     return

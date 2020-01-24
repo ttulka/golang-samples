@@ -13,6 +13,8 @@ import (
   "path/filepath"
 )
 
+const INDEX_FILE = "index.html"
+
 var root string
 
 func main() {
@@ -38,13 +40,13 @@ func main() {
     os.Exit(1)
   }
   
-  server(port)
+  startServer(port)
 }
 
-func server(port int) {
+func startServer(port int) {
   li, err := net.Listen("tcp", ":" + strconv.Itoa(port))
   if err != nil {
-    log.Fatalln(err.Error())
+    log.Fatalln("Cannot start the server:", err.Error())
   }
   defer li.Close()
   
@@ -52,45 +54,52 @@ func server(port int) {
   for {
     conn, err := li.Accept()
     if err != nil {
-      log.Fatalln(err.Error())
+      log.Fatalln("Cannot accept the client connection:", err.Error())
     }
-    go handle(conn)
+    go handleRequest(conn)
   }
 }
 
-func handle(conn net.Conn) {
+func handleRequest(conn net.Conn) {
   defer conn.Close()
   log.Printf("Serving a request %v...\n", conn.RemoteAddr())
   defer log.Printf("Diconnectiong %v...\n", conn.RemoteAddr())
-    
-  r := request(conn)
+  
+  // parse and clean the requested path
+  r := requestedPath(conn)
   if r == "" {
-    r = "index.html"
+    r = INDEX_FILE
   }
   p := path.Clean(r)
-  for strings.HasPrefix(p, "/") {
+  for strings.HasPrefix(p, "/") {         // remove the leading slash
     p = p[1:]
   }
-  if p != r {
+  if p != r && p + "/" != r {             // redirect to the new cleaned URL
     redirection(conn, "/" + p)
   }
   
-  p = filepath.Join(root, p)  
-  info, err := os.Stat(p)
+  // find the requested file
+  fp := filepath.Join(root, p)  
+  info, err := os.Stat(fp)
   if os.IsNotExist(err) {
     notfound(conn)
     return
   }
   if info.IsDir() {
-    p = filepath.Join(p, "index.html")
+    if !strings.HasSuffix(r, "/") {       // a directory ends with a slash
+      redirection(conn, "/" + p + "/")
+      return
+    }
+    fp = filepath.Join(fp, INDEX_FILE)
   }
-  info, err = os.Stat(p)
+  info, err = os.Stat(fp)
   if os.IsNotExist(err) {
     forbidden(conn)
     return
   }
   
-  f, err := os.Open(p)
+  // read the file
+  f, err := os.Open(fp)
   if err != nil {
     servererror(conn, err.Error())
     return
@@ -98,14 +107,15 @@ func handle(conn net.Conn) {
   
   fmt.Fprint(conn, "HTTP/1.1 200 OK\r\n")
   fmt.Fprintf(conn, "Content-Length: %d\r\n", info.Size())
-  fmt.Fprint(conn, "\r\n")
+  fmt.Fprint(conn, "\r\n") 
   
+  // stream the file
   for {
     b := make([]byte, 1024)
     n, err := f.Read(b)
     if err != nil {
       if err != io.EOF {
-        log.Println(err.Error())
+        log.Println("Error by reading the file", fp, ":", err.Error())
         return
       }
       break
@@ -114,21 +124,21 @@ func handle(conn net.Conn) {
   }
 }
 
-func request(conn net.Conn) string {
+func requestedPath(conn net.Conn) string {
   scann := bufio.NewScanner(conn)
-  var path string
-  firstLine := true
+  var p string
+  first := true
   for scann.Scan() {
     ln := scann.Text()
     if ln == "" {
       break
     }
-    if firstLine {
-      path = strings.Fields(ln)[1][1:]
-      firstLine = false
+    if first {
+      p = strings.Fields(ln)[1][1:]
+      first = false
     }    
   }
-  return path
+  return p
 }
 
 func redirection(conn net.Conn, loc string) {

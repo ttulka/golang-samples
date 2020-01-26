@@ -21,12 +21,14 @@ var running bool
 func main() {
   args := os.Args[1:]
   if len(args) < 1 {
-    fmt.Println("Usage: <port> [path/to/root:.]")
+    printUsage()
     os.Exit(1)
   }
   port, err := strconv.Atoi(args[0])
   if err != nil {
-    log.Fatalln("Wrong port!")
+    fmt.Println("Wrong port!")
+    printUsage()
+    os.Exit(1)
   }
   if len(args) > 1 {
     root = args[1]
@@ -42,6 +44,10 @@ func main() {
   }
   
   startServer(port)
+}
+
+func printUsage() {
+  fmt.Println("Usage: <port> [path/to/root:.]")
 }
 
 func setRootPath(p string) {
@@ -80,7 +86,8 @@ func handleRequest(conn net.Conn) {
   // parse and clean the requested path and method
   r, m := request(conn)
   if m != "GET" {
-	methodnotallowed(conn, "GET")
+    methodnotallowed(conn, "GET")
+    return
   }
   if r == "" {
     r = INDEX_FILE
@@ -161,8 +168,8 @@ func request(conn net.Conn) (string, string) {
 
 func redirection(conn net.Conn, loc string) {
   fmt.Fprint(conn, "HTTP/1.1 302 Found\r\n")
-  fmt.Fprint(conn, "Content-Length: 0\r\n")
   fmt.Fprintf(conn, "Location: %v\r\n", loc)
+  fmt.Fprint(conn, "Content-Length: 0\r\n")
   fmt.Fprint(conn, "\r\n")
 }
 
@@ -181,6 +188,7 @@ func notfound(conn net.Conn) {
 func methodnotallowed(conn net.Conn, method string) {
   fmt.Fprint(conn, "HTTP/1.1 405 Method Not Allowed\r\n")
   fmt.Fprintf(conn, "Access-Control-Allow-Methods: %v\r\n", method)
+  fmt.Fprint(conn, "Content-Length: 0\r\n")
   fmt.Fprint(conn, "\r\n")
 }
 

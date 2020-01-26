@@ -16,6 +16,7 @@ import (
 const INDEX_FILE = "index.html"
 
 var root string
+var running bool
 
 func main() {
   args := os.Args[1:]
@@ -43,15 +44,22 @@ func main() {
   startServer(port)
 }
 
+func setRootPath(p string) {
+  root = p
+}
+
 func startServer(port int) {
   li, err := net.Listen("tcp", ":" + strconv.Itoa(port))
   if err != nil {
     log.Fatalln("Cannot start the server:", err.Error())
   }
   defer li.Close()
+  defer log.Printf("Stopping the server")
   
-  log.Println("Starting dir2http server...")
-  for {
+  log.Println("Starting dir2http server")
+  running = true
+  for running {
+    log.Println("Waiting for a client to server...")
     conn, err := li.Accept()
     if err != nil {
       log.Fatalln("Cannot accept the client connection:", err.Error())
@@ -60,13 +68,20 @@ func startServer(port int) {
   }
 }
 
+func stopServer() {
+  running = false
+}
+
 func handleRequest(conn net.Conn) {
   defer conn.Close()
-  log.Printf("Serving a request %v...\n", conn.RemoteAddr())
-  defer log.Printf("Diconnectiong %v...\n", conn.RemoteAddr())
+  log.Printf("Serving a request %v\n", conn.RemoteAddr())
+  defer log.Printf("Diconnecting %v\n", conn.RemoteAddr())
   
-  // parse and clean the requested path
-  r := requestedPath(conn)
+  // parse and clean the requested path and method
+  r, m := request(conn)
+  if m != "GET" {
+	methodnotallowed(conn, "GET")
+  }
   if r == "" {
     r = INDEX_FILE
   }
@@ -76,6 +91,7 @@ func handleRequest(conn net.Conn) {
   }
   if p != r && p + "/" != r {             // redirect to the new cleaned URL
     redirection(conn, "/" + p)
+    return
   }
   
   // find the requested file
@@ -92,7 +108,7 @@ func handleRequest(conn net.Conn) {
     }
     fp = filepath.Join(fp, INDEX_FILE)
   }
-  info, err = os.Stat(fp)
+  info, err = os.Stat(fp) 
   if os.IsNotExist(err) {
     forbidden(conn)
     return
@@ -124,9 +140,9 @@ func handleRequest(conn net.Conn) {
   }
 }
 
-func requestedPath(conn net.Conn) string {
+func request(conn net.Conn) (string, string) {
   scann := bufio.NewScanner(conn)
-  var p string
+  var p, m string
   first := true
   for scann.Scan() {
     ln := scann.Text()
@@ -134,11 +150,13 @@ func requestedPath(conn net.Conn) string {
       break
     }
     if first {
-      p = strings.Fields(ln)[1][1:]
+      r := strings.Fields(ln)
+      p = r[1][1:]
+      m = r[0]
       first = false
     }    
   }
-  return p
+  return p, m
 }
 
 func redirection(conn net.Conn, loc string) {
@@ -157,6 +175,12 @@ func forbidden(conn net.Conn) {
 func notfound(conn net.Conn) {
   fmt.Fprint(conn, "HTTP/1.1 404 Not Found\r\n")
   fmt.Fprint(conn, "Content-Length: 0\r\n")
+  fmt.Fprint(conn, "\r\n")
+}
+
+func methodnotallowed(conn net.Conn, method string) {
+  fmt.Fprint(conn, "HTTP/1.1 405 Method Not Allowed\r\n")
+  fmt.Fprintf(conn, "Access-Control-Allow-Methods: %v\r\n", method)
   fmt.Fprint(conn, "\r\n")
 }
 

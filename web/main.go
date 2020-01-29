@@ -17,8 +17,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 func page(w http.ResponseWriter, r *http.Request) {
   if r.Method != http.MethodGet {
     w.Header().Set("Allow", http.MethodGet)
-    w.WriteHeader(405)
-    w.Write([]byte("Method Not Allowed"))
+    http.Error(w, "Method Not Allowed", 405)
     return
   }
   

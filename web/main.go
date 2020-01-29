@@ -3,6 +3,7 @@ package main
 import (
   "log"
   "net/http"
+  "fmt"
 )
 
 // Define a home handler function which writes a byte slice as the response body.
@@ -13,7 +14,7 @@ func home(w http.ResponseWriter, r *http.Request) {
   }  
   name := r.URL.Query().Get("name")
   if name != "" {
-    w.Write([]byte("Hello, " + name + "!"))
+    fmt.Fprintf(w, "Hello, %v!", name)
   } else {
     w.Write([]byte("Hello!"))
   }

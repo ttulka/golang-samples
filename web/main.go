@@ -3,7 +3,7 @@ package main
 import (
   "log"
   "net/http"
-  "fmt"
+  "html/template"
 )
 
 // Define a home handler function which writes a byte slice as the response body.
@@ -11,12 +11,26 @@ func home(w http.ResponseWriter, r *http.Request) {
   if r.URL.Path != "/" {
     http.NotFound(w, r)
     return
-  }  
+  }
+  ts, err := template.ParseFiles("./html/home.tmpl", "./html/layout.tmpl")
+  if err != nil {
+    log.Println(err.Error())
+    http.Error(w, "Internal Server Error", 500)
+    return
+  }
+  
+  msg := "Hello"
   name := r.URL.Query().Get("name")
   if name != "" {
-    fmt.Fprintf(w, "Hello, %v!", name)
+    msg += ", " + name + "!"
   } else {
-    w.Write([]byte("Hello!"))
+    msg += "!"
+  }
+  
+  err = ts.Execute(w, nil)
+  if err != nil {
+    log.Println(err.Error())
+    http.Error(w, "Internal Server Error", 500)
   }
 }
 
@@ -36,6 +50,8 @@ func main() {
   mux := http.NewServeMux()
   mux.HandleFunc("/", home)
   mux.HandleFunc("/page/", page)
+  
+  mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./static/"))))
   
   // Use the http.ListenAndServe() function to start a new web server. We pass in
   // two parameters: the TCP network address to listen on (in this case ":4000")

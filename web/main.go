@@ -6,7 +6,6 @@ import (
   "html/template"
 )
 
-// Define a home handler function which writes a byte slice as the response body.
 func home(w http.ResponseWriter, r *http.Request) {
   if r.URL.Path != "/" {
     http.NotFound(w, r)
@@ -27,7 +26,7 @@ func home(w http.ResponseWriter, r *http.Request) {
     msg += "!"
   }
   
-  err = ts.Execute(w, nil)
+  err = ts.Execute(w, msg)
   if err != nil {
     log.Println(err.Error())
     http.Error(w, "Internal Server Error", 500)
@@ -59,6 +58,6 @@ func main() {
   
   log.Println("Starting server on :4000")
   
-  err := server.ListenAndServe(":4000", mux)
+  err := server.ListenAndServe()
   log.Fatal(err)
 }

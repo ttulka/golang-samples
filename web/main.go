@@ -43,7 +43,7 @@ func page(w http.ResponseWriter, r *http.Request) {
   w.Write([]byte("Page"))
 }
 
-func main() {
+func routes() http.Handler {
   mux := http.NewServeMux()
 
   mux.HandleFunc("/", home)
@@ -51,9 +51,14 @@ func main() {
 
   mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./static/"))))
   
+  return mux
+}
+
+func main() {  
+  
   server := &http.Server{
     Addr: ":4000",
-    Handler: mux,
+    Handler: secureHeaders(routes()),
   }
   
   log.Println("Starting server on :4000")

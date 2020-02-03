@@ -58,7 +58,7 @@ func main() {
   
   server := &http.Server{
     Addr: ":4000",
-    Handler: logRequest(secureHeaders(routes())),
+    Handler: recoverPanic(logRequest(secureHeaders(routes()))),
   }
   
   log.Println("Starting server on :4000")

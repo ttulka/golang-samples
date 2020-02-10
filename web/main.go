@@ -54,8 +54,7 @@ func routes() http.Handler {
   return mux
 }
 
-func main() {  
-  
+func main() {
   server := &http.Server{
     Addr: ":4000",
     Handler: recoverPanic(logRequest(secureHeaders(routes()))),
@@ -63,6 +62,6 @@ func main() {
   
   log.Println("Starting server on :4000")
   
-  err := server.ListenAndServe()
+  err := server.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
   log.Fatal(err)
 }

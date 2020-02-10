@@ -64,6 +64,9 @@ func main() {
     Addr: ":4000",
     Handler: recoverPanic(logRequest(secureHeaders(routes()))),
     TLSConfig: tlsConfig,
+    IdleTimeout: time.Minute,
+    ReadTimeout: 5 * time.Second,
+    WriteTimeout: 10 * time.Second,
   }
   
   log.Println("Starting server on :4000")

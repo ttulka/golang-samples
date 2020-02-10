@@ -4,6 +4,7 @@ import (
   "log"
   "net/http"
   "html/template"
+  "crypto/tls"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -55,9 +56,14 @@ func routes() http.Handler {
 }
 
 func main() {
+  tlsConfig := &tls.Config{
+    PreferServerCipherSuites: true,
+    CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+  }
   server := &http.Server{
     Addr: ":4000",
     Handler: recoverPanic(logRequest(secureHeaders(routes()))),
+    TLSConfig: tlsConfig,
   }
   
   log.Println("Starting server on :4000")
